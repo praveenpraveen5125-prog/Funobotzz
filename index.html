@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Funobotz STEM Buddy</title>
+<style>
+:root{--p:#7c4dff;--o:#ff8a3d;--g:#2ecc9a;--bg:#fff7ec;--ink:#2b2350}
+*{box-sizing:border-box}body{margin:0;font-family:"Trebuchet MS",system-ui,sans-serif;color:var(--ink);background:linear-gradient(160deg,#ffe9c7,#e6dcff 60%,#d3f5ff);min-height:100vh}
+header{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:#fff9;backdrop-filter:blur(8px);position:sticky;top:0;z-index:5}
+h1{font-size:20px;margin:0 auto 0 0}.nav button{font-size:15px}
+button{border:0;border-radius:18px;padding:10px 16px;font-size:16px;font-weight:700;background:var(--p);color:#fff;cursor:pointer;transition:.15s}
+button:hover,button:focus-visible{transform:scale(1.06);outline:3px solid var(--o)}button.alt{background:#fff;color:var(--p);border:2px solid var(--p)}
+main{max-width:860px;margin:auto;padding:14px}section{display:none;animation:pop .4s}section.on{display:block}
+@keyframes pop{from{opacity:0;transform:translateY(12px)}}
+.card{background:#fff;border-radius:24px;padding:18px;box-shadow:0 8px 24px #7c4dff22;margin-bottom:14px}
+.hero{text-align:center}.hero .big{font-size:80px;animation:fl 2.5s infinite ease-in-out}@keyframes fl{50%{transform:translateY(-12px) rotate(6deg)}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.opt{background:#fff;border:3px solid #e6dcff;border-radius:20px;padding:12px;text-align:center;cursor:pointer;font-weight:700}.opt.sel{border-color:var(--o);background:#fff1e0}.opt .e{font-size:38px;display:block}
+.tag{font-size:11px;background:#eee;border-radius:8px;padding:2px 6px;color:#555}
+#msgs{height:52vh;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:6px}
+.b{max-width:85%;padding:10px 14px;border-radius:18px;white-space:pre-wrap;line-height:1.4;font-size:17px}.b.bot{background:#efe8ff;align-self:flex-start}.b.me{background:var(--o);color:#fff;align-self:flex-end}
+.demo{font-size:11px;opacity:.7;display:block}.q{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.q button{background:#fff;color:var(--p);border:2px solid var(--p);font-size:14px}
+.row{display:flex;gap:6px}input[type=text]{flex:1;border:3px solid #e6dcff;border-radius:18px;padding:10px;font-size:16px}
+select{font-size:18px;padding:8px;border-radius:12px}.bar{height:14px;background:#eee;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--g)}
+.dots span{animation:bl 1s infinite;display:inline-block}.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}@keyframes bl{50%{opacity:.2}}
+</style></head><body>
+<header><h1>🤖 Funobotz STEM Buddy</h1><nav class="nav row"><button onclick="show('chat')">💬 Chat</button><button class="alt" onclick="show('chars')">🎭 Characters</button><button class="alt" onclick="show('quiz')">🎯 Quiz</button><button class="alt" onclick="show('prog')">📈 Progress</button></nav></header>
+<main>
+<section id="welcome" class="on"><div class="card hero"><div class="big">🤖✨</div><h2>Let's Explore the World of STEM!</h2><p>Meet Funobotz friends who teach light, motors, circuits and more.</p>
+<button onclick="show('setup')">🚀 Start Learning</button> <button class="alt" onclick="show('chars')">Explore Characters</button></div></section>
+
+<section id="setup"><div class="card"><h2>About you</h2><p>No names or private info needed!</p>
+<label>My age: <select id="age"></select></label>
+<h3>I like…</h3><div class="grid" id="ints"></div>
+<h3>I know…</h3><div class="grid" id="lvls"></div>
+<h3>I learn best with…</h3><div class="grid" id="stys"></div><br><button onclick="startLearning()">Continue ▶</button></div></section>
+
+<section id="chars"><div class="card"><h2>Funobotz Characters</h2><p class="tag">Art shown is a placeholder until official artwork is supplied.</p><div class="grid" id="cgrid"></div></div></section>
+
+<section id="chat"><div class="card"><div class="row"><b id="who" style="margin-right:auto"></b><button class="alt" onclick="speakOn=!speakOn;this.textContent=speakOn?'🔊 On':'🔇 Voice'">🔇 Voice</button><button class="alt" onclick="restart()">↺ Restart</button></div><div id="ctx" class="tag"></div>
+<div id="msgs"></div><div class="q" id="sugs"></div>
+<div class="row"><input type="text" id="inp" placeholder="Ask me anything about STEM…" maxlength="300" aria-label="Your question"><button id="mic" class="alt" onclick="listen()" aria-label="Speak">🎤</button><button onclick="send()">Send</button></div></div></section>
+
+<section id="quiz"><div class="card"><h2>Quiz Time 🎯</h2><div class="q" id="qtopics"></div><div id="qbox"></div></div></section>
+
+<section id="prog"><div class="card"><h2>My Learning Progress</h2><div id="pbox"></div></div></section>
+</main>
+<script>
+const API=window.FUNO_API||"";
+const INTS=[["light","💡","Light & colours"],["motors","⚙️","Movement & machines"],["electronics","🔌","Electronics"],["stories","📖","Stories & characters"],["open","🎈","Surprise me!"]];
+const LVLS=[["beginner","🌱","I'm new"],["intermediate","🌿","I know a bit"],["advanced","🌳","I know lots"]];
+const STYS=[["story","📚","Stories"],["short","⚡","Short & quick"],["detailed","🔍","Detailed"],["experiment","🧪","Try & observe"]];
+const QTOP=["light","motor","circuit","timer","energy"];
+let S=JSON.parse(localStorage.funo||"null")||{profile:{age:9,interest:"open",level:"beginner",style:"story"},character:"petalo",history:[],prev:null,topics:{},quiz:{right:0,total:0,done:{}}},CH=[],speakOn=false,sel={};
+const $=i=>document.getElementById(i),save=()=>localStorage.funo=JSON.stringify(S);
+function show(id){document.querySelectorAll("section").forEach(s=>s.classList.toggle("on",s.id==id));if(id=="prog")renderProg();if(id=="chat")header();}
+function pick(boxId,list,key){const b=$(boxId);list.forEach(([v,e,t])=>{const d=document.createElement("div");d.className="opt"+(S.profile[key]==v?" sel":"");d.tabIndex=0;d.innerHTML=`<span class="e">${e}</span>${t}`;
+ d.onclick=d.onkeydown=ev=>{if(ev.type=="keydown"&&ev.key!="Enter")return;S.profile[key]=v;[...b.children].forEach(c=>c.classList.remove("sel"));d.classList.add("sel")};b.appendChild(d)})}
+$("age").innerHTML=Array.from({length:13},(_,i)=>`<option>${i+6}</option>`).join("");$("age").value=S.profile.age;
+pick("ints",INTS,"interest");pick("lvls",LVLS,"level");pick("stys",STYS,"style");
+function startLearning(){S.profile.age=+$("age").value;save();show("chat");if(!S.history.length)bot(`Hi! I'm ${name()} ${emo()} Ask me anything or tap a question below!`,["How does light work?","How does a robot move?","How do traffic lights change?"])}
+const name=()=>(CH.find(c=>c.id==S.character)||{name:"Petalo"}).name,emo=()=>(CH.find(c=>c.id==S.character)||{emoji:"🌸"}).emoji;
+function header(){$("who").textContent=`${emo()} ${name()}`;$("ctx").textContent=`Interest: ${S.profile.interest}${S.prev?" (before: "+S.prev+")":""} • Level: ${S.profile.level} • Age ${S.profile.age}`}
+function bubble(t,c,demo,err){const d=document.createElement("div");d.className="b "+c;d.textContent=t;if(demo){const s=document.createElement("small");s.className="demo";s.textContent="Demo mode response"+(err?" - Gemini error: "+err:"");d.appendChild(s)}$("msgs").appendChild(d);$("msgs").scrollTop=1e9;return d}
+function sugs(a){$("sugs").innerHTML="";(a||[]).forEach(t=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>{$("inp").value=t;send()};$("sugs").appendChild(b)})}
+function bot(t,s,demo,err){bubble(t,"bot",demo,err);sugs(s);if(speakOn&&speechSynthesis)speechSynthesis.speak(new SpeechSynthesisUtterance(t))}
+async function send(){const m=$("inp").value.trim();if(!m)return;$("inp").value="";bubble(m,"me");S.history.push({role:"user",text:m});
+ if(/^quiz me/i.test(m)){const t=m.replace(/quiz me on /i,"");const k=QTOP.includes(t)?t:"motor";show("quiz");runQuiz(k);return}
+ const ty=bubble("","bot");ty.innerHTML='<span class="dots"><span>●</span><span>●</span><span>○</span></span>';
+ try{const r=await fetch(API+"/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:m,profile:S.profile,character:S.character,history:S.history.slice(-8),previous_interest:S.prev})});
+  if(!r.ok)throw 0;const d=await r.json();ty.remove();S.profile.interest=d.state.interest;S.prev=d.state.previous_interest;S.character=d.state.character;
+  if(d.concept)S.topics[d.concept]=(S.topics[d.concept]||0)+1;S.history.push({role:"model",text:d.reply});save();header();
+  bot(d.reply,d.suggestions,d.demo,d.ai_error);if(d.characters.length>1)bubble("🤝 Friends who can help: "+d.characters.map(i=>(CH.find(c=>c.id==i)||{}).name).join(", "),"bot")}
+ catch(e){ty.remove();bot("Oops! I can't reach my brain right now 🔌 Is the server running?")}}
+$("inp").addEventListener("keydown",e=>{if(e.key=="Enter")send()});
+function listen(){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R)return alert("Voice input isn't supported here. Please type!");const r=new R();r.onresult=e=>{$("inp").value=e.results[0][0].transcript;send()};r.start()}
+function restart(){S.history=[];S.prev=null;$("msgs").innerHTML="";save();startLearning()}
+async function loadChars(){CH=await (await fetch(API+"/api/characters")).json();$("cgrid").innerHTML="";CH.forEach(c=>{const d=document.createElement("div");d.className="opt";d.tabIndex=0;
+ d.innerHTML=`<span class="e">${c.emoji}</span>${c.name}<br><small>${c.intro}</small><br><span class="tag">${c.status=="approved"?"✅ STEM ready":c.status=="behaviour-only"?"🎭 Behaviour only":"⏳ Coming soon"}</span><br><button style="margin-top:6px;font-size:13px">Explore</button>`;
+ d.onclick=()=>{S.character=c.id;save();$("msgs").innerHTML="";show("chat");const t=c.topics.length?`I can teach: ${c.topics.join(", ")}.`:"My STEM lessons aren't released yet, but I can tell you what I do!";bot(`Hi! I'm ${c.name} ${c.emoji}. ${c.behaviour||c.intro} ${t}`,c.topics.length?["Teach me about "+c.topics[0],"Explain deeper"]:["Tell me about "+c.name,"Who can teach me motors?"])};$("cgrid").appendChild(d)});header()}
+$("qtopics").innerHTML=QTOP.map(t=>`<button onclick="runQuiz('${t}')">${t}</button>`).join("");
+async function runQuiz(t){const qs=await (await fetch(API+"/api/quiz/"+t)).json();let i=0;const box=$("qbox");
+ const next=()=>{if(i>=qs.length){S.quiz.done[t]=1;save();box.innerHTML=`<h3>🏆 Topic complete: ${t}!</h3><p>Score: ${S.quiz.right}/${S.quiz.total}</p>`;return}
+  const q=qs[i];box.innerHTML=`<div class="bar"><i style="width:${i/qs.length*100}%"></i></div><h3>${q.q}</h3>`;
+  q.options.forEach((o,k)=>{const b=document.createElement("button");b.className="alt";b.style.margin="4px";b.textContent=o;b.onclick=()=>{S.quiz.total++;const ok=k==q.answer;if(ok)S.quiz.right++;save();box.innerHTML+=`<p>${ok?"🎉 Correct!":"Good try! 💪"} ${q.why}</p>`;i++;const n=document.createElement("button");n.textContent="Next ▶";n.onclick=next;box.appendChild(n)};box.appendChild(b)})};next()}
+function renderProg(){const tp=Object.entries(S.topics),q=S.quiz,pct=q.total?Math.round(q.right/q.total*100):0;
+ $("pbox").innerHTML=`<p>Topics explored: <b>${tp.length}</b> • Quiz topics completed: <b>${Object.keys(q.done).length}</b></p><p>Quiz accuracy ${pct}%</p><div class="bar"><i style="width:${pct}%"></i></div><h3>Explored</h3>`+
+ (tp.map(([k,v])=>`<p>${k} <span class="tag">${v}×</span><div class="bar"><i style="width:${Math.min(100,v*25)}%"></i></div></p>`).join("")||"<p>Nothing yet. Go chat! 💬</p>")+
+ `<h3>Try next</h3><p>${QTOP.filter(t=>!S.topics[t]).join(", ")||"You explored everything! 🌟"}</p>`;}
+loadChars();header();
+</script></body></html>
